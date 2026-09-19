@@ -1,0 +1,44 @@
+# Build output
+**/bin/
+**/obj/
+
+# Rider
+.idea/
+
+# Visual Studio
+.vs/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results
+TestResults/
+
+# Coverage
+coverage/
+*.coverage
+*.coveragexml
+
+# NuGet
+packages/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+.env.*
+appsettings.Local.json
+
+# Generated files
+*.generated.cs
+
+# Publish
+publish/
