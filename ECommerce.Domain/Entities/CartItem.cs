@@ -1,0 +1,48 @@
+﻿using ECommerce.Domain.Common;
+
+namespace ECommerce.Domain.Entities;
+
+public class CartItem : Entity
+{
+    //ctor's
+    private CartItem()
+    {
+
+    }
+
+    internal CartItem(Guid sellerOfferId, int quantity)
+    {
+        if (sellerOfferId == Guid.Empty)
+            throw new ArgumentException("Seller offer ID is required.");
+
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity must be greater than zero.");
+
+        SellerOfferId = sellerOfferId;
+        Quantity = quantity;
+    }
+
+
+    //prop's
+    public Guid CartId { get; private set; }
+    public Guid SellerOfferId { get; private set; }
+    public int Quantity { get; private set; }
+
+
+    //method's
+    internal void IncreaseQuantity(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity must be greater than zero.");
+
+        Quantity += quantity;
+    }
+
+    internal void SetQuantity(int quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity must be greater than zero.");
+
+        Quantity = quantity;
+    }
+}
