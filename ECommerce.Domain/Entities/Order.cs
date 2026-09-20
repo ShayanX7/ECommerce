@@ -1,0 +1,112 @@
+﻿using ECommerce.Domain.Common;
+using ECommerce.Domain.Enums;
+
+namespace ECommerce.Domain.Entities;
+
+public class Order : AuditableEntity
+{
+    //ctor's
+    private Order()
+    {
+
+    }
+
+    private Order(Guid userId)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("User ID is required.");
+
+        UserId = userId;
+        Status = OrderStatus.Pending;
+    }
+
+
+    //prop's
+    public Guid UserId { get; private set; }
+    public OrderStatus Status { get; private set; }
+    public decimal TotalAmount { get; private set; }
+    public string ShippingRecipientName { get; private set; } = null!;
+    public string ShippingPhoneNumber { get; private set; } = null!;
+    public string ShippingProvince { get; private set; } = null!;
+    public string ShippingCity { get; private set; } = null!;
+    public string ShippingPostalCode { get; private set; } = null!;
+    public string ShippingAddressLine { get; private set; } = null!;
+
+    private readonly List<OrderGroup> _groups = [];
+    public IReadOnlyCollection<OrderGroup> Groups => _groups.AsReadOnly();
+
+
+    //method's
+    public static Order Create(Guid userId, string recipientName, string phoneNumber, string province, string city,
+        string postalCode, string addressLine)
+    {
+        if (string.IsNullOrWhiteSpace(recipientName))
+            throw new ArgumentException("Recipient name is required.");
+
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            throw new ArgumentException("Phone number is required.");
+
+        if (string.IsNullOrWhiteSpace(province))
+            throw new ArgumentException("Province is required.");
+
+        if (string.IsNullOrWhiteSpace(city))
+            throw new ArgumentException("City is required.");
+
+        if (string.IsNullOrWhiteSpace(postalCode))
+            throw new ArgumentException("Postal code is required.");
+
+        if (string.IsNullOrWhiteSpace(addressLine))
+            throw new ArgumentException("Address is required.");
+
+        var order = new Order(userId);
+
+        order.ShippingRecipientName = recipientName;
+        order.ShippingPhoneNumber = phoneNumber;
+        order.ShippingProvince = province;
+        order.ShippingCity = city;
+        order.ShippingPostalCode = postalCode;
+        order.ShippingAddressLine = addressLine;
+
+        return order;
+    }
+
+    internal OrderGroup AddGroup(Guid sellerId)
+    {
+        var existingGroup = _groups.FirstOrDefault(x => x.SellerId == sellerId);
+        if (existingGroup is not null)
+            return existingGroup;
+
+        var group = new OrderGroup(sellerId);
+        _groups.Add(group);
+        return group;
+    }
+
+    internal void RecalculateTotal()
+    {
+        TotalAmount = _groups.Sum(x => x.TotalAmount);
+    }
+
+    public void MoveToAwaitingPayment()
+    {
+        if (Status != OrderStatus.Pending)
+            throw new InvalidOperationException("Order cannot move to awaiting payment.");
+
+        Status = OrderStatus.AwaitingPayment;
+    }
+
+    public void Confirm()
+    {
+        if (Status != OrderStatus.AwaitingPayment)
+            throw new InvalidOperationException("Only orders awaiting payment can be confirmed.");
+
+        Status = OrderStatus.Confirmed;
+    }
+
+    public void Cancel()
+    {
+        if (Status != OrderStatus.Pending && Status != OrderStatus.AwaitingPayment)
+            throw new InvalidOperationException("Order cannot be cancelled in its current state.");
+
+        Status = OrderStatus.Cancelled;
+    }
+}
