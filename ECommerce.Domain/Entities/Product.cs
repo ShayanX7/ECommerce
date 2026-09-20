@@ -14,7 +14,7 @@ public class Product : AuditableEntity
     public Guid CategoryId { get; private set; }
     public Category Category { get; private set; } = null!;
 
-    public ProductStatus Status { get; private set; }
+    public ProductStatus Status { get; private set; } =  ProductStatus.Draft;
 
     private readonly List<ProductVariant> _variants = [];
     public IReadOnlyCollection<ProductVariant> Variants => _variants.AsReadOnly();
