@@ -9,7 +9,7 @@ public class ProductVariant : AuditableEntity
     public Product Product { get; private set; } = null!;
     public string SKU { get; private set; } = null!;
     public string? Name { get; private set; }
-    public ProductVariantStatus Status { get; set; }
+    public ProductVariantStatus Status { get; set; } = ProductVariantStatus.Draft;
     
     private readonly List<SellerOffer> _sellerOffers = [];
     public IReadOnlyCollection<SellerOffer> SellerOffers => _sellerOffers.AsReadOnly();
