@@ -34,6 +34,8 @@ public class Order : AuditableEntity
 
     private readonly List<OrderGroup> _groups = [];
     public IReadOnlyCollection<OrderGroup> Groups => _groups.AsReadOnly();
+    private readonly List<Payment> _payments = [];
+    public IReadOnlyCollection<Payment> Payments => _payments.AsReadOnly();
 
 
     //method's
@@ -108,5 +110,11 @@ public class Order : AuditableEntity
             throw new InvalidOperationException("Order cannot be cancelled in its current state.");
 
         Status = OrderStatus.Cancelled;
+    }
+
+    internal void AddPayment(Payment payment)
+    {
+        ArgumentNullException.ThrowIfNull(payment);
+        _payments.Add(payment);
     }
 }
