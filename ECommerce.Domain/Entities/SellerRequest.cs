@@ -1,8 +1,9 @@
-﻿using ECommerce.Domain.Enums;
+﻿using ECommerce.Domain.Common;
+using ECommerce.Domain.Enums;
 
 namespace ECommerce.Domain.Entities;
 
-public class SellerRequest
+public class SellerRequest : Entity
 {
     //ctor's
     private SellerRequest()

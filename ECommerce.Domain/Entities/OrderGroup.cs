@@ -1,4 +1,5 @@
 ﻿using ECommerce.Domain.Common;
+using ECommerce.Domain.Enums;
 
 namespace ECommerce.Domain.Entities;
 
@@ -16,11 +17,13 @@ public class OrderGroup : AuditableEntity
             throw new ArgumentException("Seller ID is required.");
 
         SellerId = sellerId;
+        Status = OrderGroupStatus.Pending;
     }
 
     //prop's
     public Guid OrderId { get; private set; }
     public Guid SellerId { get; private set; }
+    public OrderGroupStatus Status { get; set; }
     public decimal TotalAmount { get; private set; }
 
     private readonly List<OrderItem> _items = [];
