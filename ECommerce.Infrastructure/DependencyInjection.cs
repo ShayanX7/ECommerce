@@ -16,7 +16,7 @@ public static class DependencyInjection
         services.AddDbContext<ECommerceDbContext>(options => options.UseNpgsql(connectionString));
 
         services.AddIdentityCore<ApplicationUser>()
-            .AddRoles<IdentityRole>()
+            .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<ECommerceDbContext>();
         
         return services;
