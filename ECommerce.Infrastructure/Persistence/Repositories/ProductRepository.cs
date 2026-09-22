@@ -16,4 +16,9 @@ internal sealed class ProductRepository(ECommerceDbContext dbContext) : IProduct
             .Include(x => x.Images)
             .FirstOrDefaultAsync(x => x.Id == productId, cancellationToken);
     }
+
+    public async Task AddAsync(Product product, CancellationToken cancellationToken = default)
+    {
+        await dbContext.Products.AddAsync(product, cancellationToken);
+    }
 }

@@ -1,6 +1,15 @@
-@ECommerce_API_HostAddress = http://localhost:5115
+@ECommerce_API_HostAddress = https://localhost:7102
 
-GET {{ECommerce_API_HostAddress}}/api/products/0936efb2-bf6b-4e45-9d6e-978970c3ef59
+GET {{ECommerce_API_HostAddress}}/api/products/4b67459d-e12a-4c5b-b244-437d89756661
 Accept: application/json
 
 ###
+POST {{ECommerce_API_HostAddress}}/api/products
+Content-Type: application/json
+
+{
+  "name": "iPhone 17",
+  "description": "Apple smartphone",
+  "brandId": "40878a7c-2cc3-4efb-921f-572e3310aa22",
+  "categoryId": "822a39ea-a5d2-47bb-bbbc-67f4165177eb"
+}

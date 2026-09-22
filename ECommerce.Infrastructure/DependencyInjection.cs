@@ -22,6 +22,9 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ECommerceDbContext>();
         
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IBrandRepository, BrandRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ECommerceDbContext>());
         
         return services;
     }

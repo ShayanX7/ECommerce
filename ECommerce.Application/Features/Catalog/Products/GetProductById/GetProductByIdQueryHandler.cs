@@ -4,7 +4,7 @@ using MediatR;
 
 namespace ECommerce.Application.Features.Catalog.Products.GetProductById;
 
-public sealed class GetProductByIdHandler(IProductRepository productRepository) : IRequestHandler<GetProductByIdQuery, ProductDetailsDto?>
+public sealed class GetProductByIdQueryHandler(IProductRepository productRepository) : IRequestHandler<GetProductByIdQuery, ProductDetailsDto?>
 {
     public async Task<ProductDetailsDto?> Handle(GetProductByIdQuery query, CancellationToken cancellationToken)
     {

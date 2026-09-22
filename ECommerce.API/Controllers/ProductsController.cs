@@ -1,4 +1,5 @@
-﻿using ECommerce.Application.Features.Catalog.Products.GetProductById;
+﻿using ECommerce.Application.Features.Catalog.Products.CreateProduct;
+using ECommerce.Application.Features.Catalog.Products.GetProductById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,5 +17,19 @@ public class ProductsController(ISender sender) : ControllerBase
             return NotFound();
 
         return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> Create(CreateProductRequest request, CancellationToken cancellationToken)
+    {
+        var command = new CreateProductCommand(
+            request.Name,
+            request.Description,
+            request.BrandId,
+            request.CategoryId);
+        
+        var productId = await sender.Send(command, cancellationToken);
+        
+        return CreatedAtAction(nameof(GetById), new { id = productId }, new { id = productId });
     }
 }
