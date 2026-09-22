@@ -13,3 +13,14 @@ Content-Type: application/json
   "brandId": "40878a7c-2cc3-4efb-921f-572e3310aa22",
   "categoryId": "822a39ea-a5d2-47bb-bbbc-67f4165177eb"
 }
+
+###
+POST {{ECommerce_API_HostAddress}}/api/products
+Content-Type: application/json
+
+{
+  "name": "",
+  "description": "",
+  "brandId": "00000000-0000-0000-0000-000000000000",
+  "categoryId": "00000000-0000-0000-0000-000000000000"
+}

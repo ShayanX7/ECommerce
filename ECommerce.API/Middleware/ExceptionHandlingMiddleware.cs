@@ -1,6 +1,7 @@
 ﻿using ECommerce.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using FluentValidation;
 
 namespace ECommerce.API.Middleware;
 
@@ -24,20 +25,36 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         var statusCode = exception switch
         {
             NotFoundException => StatusCodes.Status404NotFound,
+            ValidationException => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
 
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
-            Title = statusCode == StatusCodes.Status404NotFound
-                ? "Resource not found."
-                : "An unexpected error occurred.",
-            Detail = statusCode == StatusCodes.Status404NotFound ? exception.Message : null,
+            Title = statusCode switch
+            {
+                StatusCodes.Status404NotFound => "Resource not found.",
+                StatusCodes.Status400BadRequest => "Validation failed.",
+                _ => "An unhandled exception occurred."
+            },
+            Detail = statusCode switch
+            {
+                StatusCodes.Status404NotFound => exception.Message,
+                _ => null
+            },
             Instance = context.Request.Path
         };
-        
+
+        if (exception is ValidationException validationException)
+        {
+            problemDetails.Extensions["errors"] = validationException.Errors
+                .GroupBy(error => error.PropertyName).ToDictionary(group => group.Key,
+                    group => group.Select(error => error.ErrorMessage).ToArray());
+        }
+
         context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/problem+json";
         await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails));
     }
 }
