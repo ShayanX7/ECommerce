@@ -13,7 +13,6 @@ Content-Type: application/json
   "brandId": "40878a7c-2cc3-4efb-921f-572e3310aa22",
   "categoryId": "822a39ea-a5d2-47bb-bbbc-67f4165177eb"
 }
-
 ###
 POST {{ECommerce_API_HostAddress}}/api/products
 Content-Type: application/json
@@ -24,3 +23,70 @@ Content-Type: application/json
   "brandId": "00000000-0000-0000-0000-000000000000",
   "categoryId": "00000000-0000-0000-0000-000000000000"
 }
+###
+GET {{ECommerce_API_HostAddress}}/api/brands/08d66b91-da02-474e-b873-3f9dd1656b20
+Accept: application/json
+
+###
+POST {{ECommerce_API_HostAddress}}/api/brands
+Content-Type: application/json
+
+{
+  "name": "Samsung"
+}
+###
+POST {{ECommerce_API_HostAddress}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "TV",
+  "parentCategoryId": "59fa1994-6a2a-4647-a6c9-c08dc8142fad"
+}
+###
+GET {{ECommerce_API_HostAddress}}/api/categories/59fa1994-6a2a-4647-a6c9-c08dc8142fad
+Accept: application/json
+
+###
+POST {{ECommerce_API_HostAddress}}/api/product-variants
+Content-Type: application/json
+
+{
+  "productId": "4b67459d-e12a-4c5b-b244-437d89756661",
+  "sku": "IPHONE-17-128-BLK",
+  "name": "Black 128GB"
+}
+###
+GET {{ECommerce_API_HostAddress}}/api/product-variants/72e245c7-7e84-42d5-8844-ef766bd3f052
+Accept: application/json
+
+###
+POST {{ECommerce_API_HostAddress}}/api/product-images
+Content-Type: application/json
+
+{
+  "productId": "4b67459d-e12a-4c5b-b244-437d89756661",
+  "productVariantId": "72e245c7-7e84-42d5-8844-ef766bd3f052",
+  "url": "https://example.com/iphone-front.jpg",
+  "altText": "iphone front view",
+  "sortOrder": 2,
+  "isPrimary": false
+}
+###
+GET {{ECommerce_API_HostAddress}}/api/product-images/535f2f92-e5c6-401b-9ecb-2313cac9ec3d
+Accept: application/json
+
+###
+POST {{ECommerce_API_HostAddress}}/api/seller-offers
+Content-Type: application/json
+
+{
+  "sellerId": "01a0cd45-d428-765d-8999-93e38daf4bd1",
+  "productVariantId": "72e245c7-7e84-42d5-8844-ef766bd3f052",
+  "price": 50000000,
+  "stock": 10
+}
+###
+GET {{ECommerce_API_HostAddress}}/api/seller-offers/9c0db6d2-fd7c-4039-9032-692fac6de236
+Accept: application/json
+
+###

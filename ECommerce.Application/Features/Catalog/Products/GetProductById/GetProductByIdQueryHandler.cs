@@ -1,10 +1,16 @@
 ﻿using ECommerce.Application.Abstractions.Persistence;
+using ECommerce.Application.Features.Catalog.Brands.GetBrandById;
+using ECommerce.Application.Features.Catalog.Categories.GetCategoryById;
+using ECommerce.Application.Features.Catalog.ProductImages.GetProductImageById;
+using ECommerce.Application.Features.Catalog.ProductVariants.GetProductVariantById;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.GetSellerOfferById;
 using ECommerce.Domain.Enums;
 using MediatR;
 
 namespace ECommerce.Application.Features.Catalog.Products.GetProductById;
 
-public sealed class GetProductByIdQueryHandler(IProductRepository productRepository) : IRequestHandler<GetProductByIdQuery, ProductDetailsDto?>
+public sealed class GetProductByIdQueryHandler(IProductRepository productRepository)
+    : IRequestHandler<GetProductByIdQuery, ProductDetailsDto?>
 {
     public async Task<ProductDetailsDto?> Handle(GetProductByIdQuery query, CancellationToken cancellationToken)
     {
@@ -20,10 +26,11 @@ public sealed class GetProductByIdQueryHandler(IProductRepository productReposit
                 product.Brand!.Id,
                 product.Brand.Name),
             new CategoryDto(product.Category.Id, product.Category.Name),
-            product.Variants.Select(variant => new ProductVariantDto(variant.Id, variant.SKU, variant.Name,
-                    variant.Status,
-                    variant.SellerOffers.Where(offer => offer.Status == SellerOfferStatus.Active).Select(offer =>
-                        new SellerOfferDto(offer.Id, offer.SellerId, offer.Price, offer.Stock, offer.Status)).ToList()))
+            product.Variants.Select(variant => new ProductVariantDto(variant.Id, variant.ProductId, variant.SKU,
+                    variant.Name, variant.Status, variant.SellerOffers
+                        .Where(offer => offer.Status == SellerOfferStatus.Active).Select(offer =>
+                            new SellerOfferDto(offer.Id, offer.SellerId, offer.Price, offer.Stock, offer.Status))
+                        .ToList()))
                 .ToList(),
             product.Images.OrderBy(image => image.SortOrder).Select(image => new ProductImageDto(image.Id, image.Url,
                 image.AltText, image.SortOrder, image.IsPrimary, image.ProductVariantId)).ToList());

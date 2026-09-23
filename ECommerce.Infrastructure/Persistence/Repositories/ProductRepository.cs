@@ -6,9 +6,9 @@ namespace ECommerce.Infrastructure.Persistence.Repositories;
 
 internal sealed class ProductRepository(ECommerceDbContext dbContext) : IProductRepository
 {
-    public Task<Product?> GetByIdWithDetailsAsync(Guid productId, CancellationToken cancellationToken = default)
+    public async Task<Product?> GetByIdWithDetailsAsync(Guid productId, CancellationToken cancellationToken = default)
     {
-        return dbContext.Products.AsNoTracking().AsSplitQuery()
+        return await dbContext.Products.AsNoTracking().AsSplitQuery()
             .Include(x => x.Brand)
             .Include(x => x.Category)
             .Include(x => x.Variants)
@@ -20,5 +20,10 @@ internal sealed class ProductRepository(ECommerceDbContext dbContext) : IProduct
     public async Task AddAsync(Product product, CancellationToken cancellationToken = default)
     {
         await dbContext.Products.AddAsync(product, cancellationToken);
+    }
+
+    public async Task<bool> ExistsAsync(Guid productId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Products.AnyAsync(x => x.Id == productId, cancellationToken);
     }
 }

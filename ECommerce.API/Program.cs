@@ -1,8 +1,10 @@
 using ECommerce.API.Middleware;
 using ECommerce.Application;
 using ECommerce.Infrastructure;
+using ECommerce.Infrastructure.Identity;
 using ECommerce.Infrastructure.Persistence;
 using ECommerce.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +25,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ECommerceDbContext>();
-    await DatabaseSeeder.SeedAsync(dbContext);
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    await DatabaseSeeder.SeedAsync(dbContext,userManager);
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

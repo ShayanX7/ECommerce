@@ -64,7 +64,7 @@ public class SellerOffer : AuditableEntity
     public void UpdateStock(int stock)
     {
         if (stock <= 0)
-            throw new ArgumentException("Stock cannot be negative.");
+            throw new ArgumentException("Stock must be greater than zero.");
 
         Stock = stock;
     }

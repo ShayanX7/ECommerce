@@ -20,14 +20,8 @@ public class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Create(CreateProductRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult> Create(CreateProductCommand command, CancellationToken cancellationToken)
     {
-        var command = new CreateProductCommand(
-            request.Name,
-            request.Description,
-            request.BrandId,
-            request.CategoryId);
-        
         var productId = await sender.Send(command, cancellationToken);
         
         return CreatedAtAction(nameof(GetById), new { id = productId }, new { id = productId });
