@@ -1,6 +1,7 @@
 ﻿using ECommerce.Application.Features.Sellers.SellerRequests.ApproveSellerRequest;
 using ECommerce.Application.Features.Sellers.SellerRequests.CreateSellerRequest;
 using ECommerce.Application.Features.Sellers.SellerRequests.GetSellerRequestById;
+using ECommerce.Application.Features.Sellers.SellerRequests.RejectSellerRequest;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,6 +34,14 @@ public class SellerRequestsController(ISender sender) : ControllerBase
         CancellationToken cancellationToken)
     {
         await sender.Send(new ApproveSellerRequestCommand(id, request.AdminUserId), cancellationToken);
+        return NoContent();
+    }
+    
+    [HttpPost("{id:guid}/reject")]
+    public async Task<IActionResult> Reject(Guid id, [FromBody] RejectSellerRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(new RejectSellerRequestCommand(id, request.AdminUserId), cancellationToken);
         return NoContent();
     }
 }
