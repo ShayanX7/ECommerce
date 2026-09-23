@@ -90,3 +90,11 @@ GET {{ECommerce_API_HostAddress}}/api/seller-offers/9c0db6d2-fd7c-4039-9032-692f
 Accept: application/json
 
 ###
+POST {{ECommerce_API_HostAddress}}/api/seller-requests
+Content-Type: application/json
+
+{
+  "userId": "01a0cd45-d428-765d-8999-93e38daf4bd1",
+  "reason": "I want to sell mobile phones."
+}
+###
