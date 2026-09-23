@@ -102,3 +102,9 @@ GET {{ECommerce_API_HostAddress}}/api/seller-requests/9e4e3421-7c32-48cb-a6b4-80
 Accept: application/json
 
 ###
+POST {{ECommerce_API_HostAddress}}/api/seller-requests/9e4e3421-7c32-48cb-a6b4-80303adc3c4b/approve
+Content-Type: application/json
+
+{
+  "adminUserId": "01a0cd45-d428-765d-8999-93e38daf4bd1"
+}

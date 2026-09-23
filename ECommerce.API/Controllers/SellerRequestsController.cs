@@ -1,4 +1,5 @@
-﻿using ECommerce.Application.Features.Sellers.SellerRequests.CreateSellerRequest;
+﻿using ECommerce.Application.Features.Sellers.SellerRequests.ApproveSellerRequest;
+using ECommerce.Application.Features.Sellers.SellerRequests.CreateSellerRequest;
 using ECommerce.Application.Features.Sellers.SellerRequests.GetSellerRequestById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -25,5 +26,13 @@ public class SellerRequestsController(ISender sender) : ControllerBase
         var sellerRequestId = await sender.Send(command, cancellationToken);
 
         return CreatedAtAction(nameof(GetById), new { id = sellerRequestId }, new { id = sellerRequestId });
+    }
+
+    [HttpPost("{id:guid}/approve")]
+    public async Task<IActionResult> Approve(Guid id, [FromBody] ApproveSellerRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(new ApproveSellerRequestCommand(id, request.AdminUserId), cancellationToken);
+        return NoContent();
     }
 }
