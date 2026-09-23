@@ -98,3 +98,7 @@ Content-Type: application/json
   "reason": "I want to sell mobile phones."
 }
 ###
+GET {{ECommerce_API_HostAddress}}/api/seller-requests/9e4e3421-7c32-48cb-a6b4-80303adc3c4b
+Accept: application/json
+
+###

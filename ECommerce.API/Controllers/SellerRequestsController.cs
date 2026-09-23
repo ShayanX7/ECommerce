@@ -1,4 +1,5 @@
 ﻿using ECommerce.Application.Features.Sellers.SellerRequests.CreateSellerRequest;
+using ECommerce.Application.Features.Sellers.SellerRequests.GetSellerRequestById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,16 +10,20 @@ namespace ECommerce.API.Controllers;
 public class SellerRequestsController(ISender sender) : ControllerBase
 {
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<SellerRequestDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
-        return Ok();
+        var sellerRequestId = await sender.Send(new GetSellerRequestByIdQuery(id), cancellationToken);
+        if (sellerRequestId is null)
+            return NotFound();
+
+        return Ok(sellerRequestId);
     }
 
     [HttpPost]
     public async Task<ActionResult> Create(CreateSellerRequestCommand command, CancellationToken cancellationToken)
     {
-        var sellerId = await sender.Send(command, cancellationToken);
+        var sellerRequestId = await sender.Send(command, cancellationToken);
 
-        return CreatedAtAction(nameof(GetById), new { id = sellerId }, new { id = sellerId });
+        return CreatedAtAction(nameof(GetById), new { id = sellerRequestId }, new { id = sellerRequestId });
     }
 }
