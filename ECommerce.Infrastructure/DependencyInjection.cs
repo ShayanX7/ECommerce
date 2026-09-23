@@ -1,5 +1,7 @@
-﻿using ECommerce.Infrastructure.Identity;
+﻿using ECommerce.Application.Abstractions.Persistence;
+using ECommerce.Infrastructure.Identity;
 using ECommerce.Infrastructure.Persistence;
+using ECommerce.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -18,6 +20,15 @@ public static class DependencyInjection
         services.AddIdentityCore<ApplicationUser>()
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<ECommerceDbContext>();
+        
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IBrandRepository, BrandRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
+        services.AddScoped<IProductImageRepository, ProductImageRepository>();
+        services.AddScoped<ISellerOfferRepository, SellerOfferRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ECommerceDbContext>());
         
         return services;
     }

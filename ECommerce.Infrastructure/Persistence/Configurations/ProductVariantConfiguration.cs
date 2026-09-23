@@ -10,7 +10,7 @@ public class ProductVariantConfiguration : IEntityTypeConfiguration<ProductVaria
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.SKU).IsRequired().HasMaxLength(100);
-        builder.Property(x => x.Name).IsRequired().HasMaxLength(150);
+        builder.Property(x => x.Name).HasMaxLength(150);
         builder.Property(x => x.Status).IsRequired();
         
         builder.HasOne(x => x.Product)

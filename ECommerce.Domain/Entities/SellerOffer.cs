@@ -23,7 +23,7 @@ public class SellerOffer : AuditableEntity
             throw new ArgumentException("Price must be greater than zero.");
 
         if (stock <= 0)
-            throw new ArgumentException("Stock cannot be negative.");
+            throw new ArgumentException("Stock must be greater than zero.");
 
         SellerId = sellerId;
         ProductVariantId = productVariantId;
@@ -64,7 +64,7 @@ public class SellerOffer : AuditableEntity
     public void UpdateStock(int stock)
     {
         if (stock <= 0)
-            throw new ArgumentException("Stock cannot be negative.");
+            throw new ArgumentException("Stock must be greater than zero.");
 
         Stock = stock;
     }

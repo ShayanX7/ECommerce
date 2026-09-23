@@ -1,4 +1,10 @@
+using ECommerce.API.Middleware;
+using ECommerce.Application;
 using ECommerce.Infrastructure;
+using ECommerce.Infrastructure.Identity;
+using ECommerce.Infrastructure.Persistence;
+using ECommerce.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,11 +14,22 @@ builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddApplication();
+
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ECommerceDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    await DatabaseSeeder.SeedAsync(dbContext,userManager);
+}
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
