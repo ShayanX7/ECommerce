@@ -7,7 +7,7 @@ namespace ECommerce.API.Middleware;
 
 public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
-    public async Task InvokeAsync(HttpContext context, CancellationToken cancellationToken)
+    public async Task InvokeAsync(HttpContext context)
     {
         try
         {
@@ -20,7 +20,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
                 StatusCodes.Status400BadRequest,
                 "Validation failed.",
                 exception.Message,
-                cancellationToken);
+                context.RequestAborted);
         }
         catch (NotFoundException exception)
         {
@@ -29,7 +29,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
                 StatusCodes.Status404NotFound,
                 "Resource not found.",
                 exception.Message,
-                cancellationToken);
+                context.RequestAborted);
         }
         catch (DomainException exception)
         {
@@ -38,7 +38,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
                 StatusCodes.Status409Conflict,
                 "Business rule violation.",
                 exception.Message,
-                cancellationToken);
+                context.RequestAborted);
         }
         catch (BusinessRuleException exception)
         {
@@ -47,7 +47,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
                 StatusCodes.Status409Conflict,
                 "Business rule violation.",
                 exception.Message,
-                cancellationToken);
+                context.RequestAborted);
         }
         catch (ConcurrencyConflictException exception)
         {
@@ -56,7 +56,16 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
                 StatusCodes.Status409Conflict,
                 "Concurrency conflict.",
                 exception.Message,
-                cancellationToken);
+                context.RequestAborted);
+        }
+        catch (PersistenceConflictException exception)
+        {
+            await WriteProblemDetailsAsync(
+                context,
+                StatusCodes.Status409Conflict,
+                "Persistence conflict.",
+                exception.Message,
+                context.RequestAborted);
         }
         catch (Exception exception)
         {
@@ -66,7 +75,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
                 StatusCodes.Status500InternalServerError,
                 "An unhandled exception occurred.",
                 "An unhandled exception occurred.",
-                cancellationToken);
+                context.RequestAborted);
         }
     }
 

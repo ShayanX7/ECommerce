@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ECommerce.Application.Exceptions;
 using ECommerce.Domain.Common;
+using Npgsql;
 
 namespace ECommerce.Infrastructure.Persistence;
 
@@ -26,14 +27,14 @@ public class ECommerceDbContext(DbContextOptions<ECommerceDbContext> options)
     public DbSet<OrderGroup> OrderGroups => Set<OrderGroup>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Payment> Payments => Set<Payment>();
-    
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(ECommerceDbContext).Assembly);
     }
-    
+
     private void ApplyAuditInformation()
     {
         var now = DateTime.UtcNow;
@@ -56,6 +57,10 @@ public class ECommerceDbContext(DbContextOptions<ECommerceDbContext> options)
         {
             throw new ConcurrencyConflictException("the resource was modified by another request.", exception);
         }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception))
+        {
+            throw new PersistenceConflictException("The operation conflicts with existing data.", exception);
+        }
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
@@ -68,6 +73,10 @@ public class ECommerceDbContext(DbContextOptions<ECommerceDbContext> options)
         catch (DbUpdateConcurrencyException exception)
         {
             throw new ConcurrencyConflictException("the resource was modified by another request.", exception);
+        }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception))
+        {
+            throw new PersistenceConflictException("The operation conflicts with existing data.", exception);
         }
     }
 
@@ -83,5 +92,14 @@ public class ECommerceDbContext(DbContextOptions<ECommerceDbContext> options)
         {
             throw new ConcurrencyConflictException("the resource was modified by another request.", exception);
         }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception))
+        {
+            throw new PersistenceConflictException("The operation conflicts with existing data.", exception);
+        }
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException exception)
+    {
+        return exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
     }
 }
