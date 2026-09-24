@@ -3,7 +3,7 @@ using ECommerce.Domain.Exceptions;
 
 namespace ECommerce.Domain.Entities;
 
-public class ProductImage : Entity
+public class ProductImage : AuditableEntity
 {
     //ctor's
     private ProductImage()
@@ -17,7 +17,7 @@ public class ProductImage : Entity
         if (productId == Guid.Empty)
             throw new DomainException("Product Id is required.");
 
-        if (string.IsNullOrEmpty(url))
+        if (string.IsNullOrWhiteSpace(url))
             throw new DomainException("Image URL is required.");
 
         if (sortOrder < 0)
@@ -25,7 +25,7 @@ public class ProductImage : Entity
 
         ProductId = productId;
         ProductVariantId = productVariantId;
-        Url = url;
+        Url = url.Trim();
         AltText = altText;
         SortOrder = sortOrder;
         IsPrimary = isPrimary;
@@ -47,8 +47,5 @@ public class ProductImage : Entity
 
     //method's
     public static ProductImage Create(Guid productId, string url, string? altText, int sortOrder, bool isPrimary,
-        Guid? productVariantId = null)
-    {
-        return new ProductImage(productId, url, altText, sortOrder, isPrimary, productVariantId);
-    }
+        Guid? productVariantId = null) => new(productId, url, altText, sortOrder, isPrimary, productVariantId);
 }

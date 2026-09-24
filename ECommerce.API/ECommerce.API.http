@@ -1,6 +1,6 @@
 @ECommerce_API_HostAddress = https://localhost:7102
 
-GET {{ECommerce_API_HostAddress}}/api/products/4b67459d-e12a-4c5b-b244-437d89756661
+GET {{ECommerce_API_HostAddress}}/api/products/cafb0c28-52bf-4d4c-817f-9dd42ad9ee3c
 Accept: application/json
 
 ###
@@ -8,9 +8,9 @@ POST {{ECommerce_API_HostAddress}}/api/products
 Content-Type: application/json
 
 {
-  "name": "iPhone 17",
-  "description": "Apple smartphone",
-  "brandId": "40878a7c-2cc3-4efb-921f-572e3310aa22",
+  "name": "Samsung S26 Ultra",
+  "description": "Samsung smartphone",
+  "brandId": "08d66b91-da02-474e-b873-3f9dd1656b20",
   "categoryId": "822a39ea-a5d2-47bb-bbbc-67f4165177eb"
 }
 ###
@@ -43,7 +43,7 @@ Content-Type: application/json
   "parentCategoryId": "59fa1994-6a2a-4647-a6c9-c08dc8142fad"
 }
 ###
-GET {{ECommerce_API_HostAddress}}/api/categories/59fa1994-6a2a-4647-a6c9-c08dc8142fad
+GET {{ECommerce_API_HostAddress}}/api/categories/822a39ea-a5d2-47bb-bbbc-67f4165177eb
 Accept: application/json
 
 ###

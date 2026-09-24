@@ -16,8 +16,8 @@ public class Category : AuditableEntity
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("Category name is required.");
 
-        Name = name;
-        ParentCategoryId = parentCategoryId;
+        Name = name.Trim();
+        ParentCategoryId = parentCategoryId == Guid.Empty ? null : parentCategoryId;
     }
 
 
@@ -32,8 +32,5 @@ public class Category : AuditableEntity
 
 
     //method's
-    public static Category Create(string name, Guid? parentCategoryId = null)
-    {
-        return new Category(name, parentCategoryId);
-    }
+    public static Category Create(string name, Guid? parentCategoryId = null) => new(name, parentCategoryId);
 }

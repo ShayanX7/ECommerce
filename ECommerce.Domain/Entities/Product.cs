@@ -26,8 +26,8 @@ public class Product : AuditableEntity
         if (categoryId == Guid.Empty)
             throw new DomainException("Category ID is required.");
 
-        Name = name;
-        Description = description;
+        Name = name.Trim();
+        Description = description.Trim();
         BrandId = brandId;
         CategoryId = categoryId;
         Status = ProductStatus.Draft;
@@ -52,15 +52,6 @@ public class Product : AuditableEntity
 
 
     //method's
-    public static Product Create(string name, string description, Guid brandId, Guid categoryId)
-    {
-        return new Product
-        {
-            Name = name,
-            Description = description,
-            BrandId = brandId,
-            CategoryId = categoryId,
-            Status = ProductStatus.Draft
-        };
-    }
+    public static Product Create(string name, string description, Guid brandId, Guid categoryId) =>
+        new(name, description, brandId, categoryId);
 }
