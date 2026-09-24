@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ECommerce.Application.Exceptions;
+using ECommerce.Domain.Common;
 
 namespace ECommerce.Infrastructure.Persistence;
 
@@ -25,16 +26,28 @@ public class ECommerceDbContext(DbContextOptions<ECommerceDbContext> options)
     public DbSet<OrderGroup> OrderGroups => Set<OrderGroup>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Payment> Payments => Set<Payment>();
-
+    
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(ECommerceDbContext).Assembly);
     }
+    
+    private void ApplyAuditInformation()
+    {
+        var now = DateTime.UtcNow;
+
+        foreach (var entry in ChangeTracker.Entries<AuditableEntity>())
+        {
+            if (entry.State == EntityState.Modified)
+                entry.Property(x => x.UpdatedAt).CurrentValue = now;
+        }
+    }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        ApplyAuditInformation();
         try
         {
             return await base.SaveChangesAsync(cancellationToken);
@@ -47,6 +60,7 @@ public class ECommerceDbContext(DbContextOptions<ECommerceDbContext> options)
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
+        ApplyAuditInformation();
         try
         {
             return base.SaveChanges(acceptAllChangesOnSuccess);
@@ -60,6 +74,7 @@ public class ECommerceDbContext(DbContextOptions<ECommerceDbContext> options)
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
+        ApplyAuditInformation();
         try
         {
             return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
