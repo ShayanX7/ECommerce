@@ -1,6 +1,7 @@
 ﻿using ECommerce.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using ECommerce.Domain.Exceptions;
 using FluentValidation;
 
 namespace ECommerce.API.Middleware;
@@ -26,6 +27,8 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         {
             NotFoundException => StatusCodes.Status404NotFound,
             ValidationException => StatusCodes.Status400BadRequest,
+            DomainException => StatusCodes.Status409Conflict,
+            BusinessRuleException => StatusCodes.Status409Conflict,
             _ => StatusCodes.Status500InternalServerError
         };
 
@@ -36,11 +39,13 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
             {
                 StatusCodes.Status404NotFound => "Resource not found.",
                 StatusCodes.Status400BadRequest => "Validation failed.",
+                StatusCodes.Status409Conflict => "Business rule violation",
                 _ => "An unhandled exception occurred."
             },
             Detail = statusCode switch
             {
                 StatusCodes.Status404NotFound => exception.Message,
+                StatusCodes.Status409Conflict => exception.Message,
                 _ => null
             },
             Instance = context.Request.Path
@@ -55,6 +60,6 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
 
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/problem+json";
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails));
+        await context.Response.WriteAsJsonAsync(problemDetails);
     }
 }

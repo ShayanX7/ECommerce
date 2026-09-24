@@ -1,5 +1,6 @@
 ﻿using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums;
+using ECommerce.Domain.Exceptions;
 
 namespace ECommerce.Domain.Entities;
 
@@ -14,16 +15,16 @@ public class Product : AuditableEntity
     private Product(string name, string description, Guid brandId, Guid categoryId)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Product name is required.");
+            throw new DomainException("Product name is required.");
 
         if (string.IsNullOrWhiteSpace(description))
-            throw new ArgumentException("Product description is required.");
+            throw new DomainException("Product description is required.");
 
         if (brandId == Guid.Empty)
-            throw new ArgumentException("Brand ID is required.");
+            throw new DomainException("Brand ID is required.");
 
         if (categoryId == Guid.Empty)
-            throw new ArgumentException("Category ID is required.");
+            throw new DomainException("Category ID is required.");
 
         Name = name;
         Description = description;

@@ -1,4 +1,5 @@
 ﻿using ECommerce.Domain.Common;
+using ECommerce.Domain.Exceptions;
 
 namespace ECommerce.Domain.Entities;
 
@@ -13,7 +14,7 @@ public class Category : AuditableEntity
     private Category(string name, Guid? parentCategoryId)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Category name is required.");
+            throw new DomainException("Category name is required.");
 
         Name = name;
         ParentCategoryId = parentCategoryId;

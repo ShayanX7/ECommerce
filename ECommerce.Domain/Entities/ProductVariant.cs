@@ -1,5 +1,6 @@
 ﻿using ECommerce.Domain.Common;
 using ECommerce.Domain.Enums;
+using ECommerce.Domain.Exceptions;
 
 namespace ECommerce.Domain.Entities;
 
@@ -14,16 +15,16 @@ public class ProductVariant : AuditableEntity
     private ProductVariant(Guid productId, string sku, string? name)
     {
         if (productId == Guid.Empty)
-            throw new ArgumentException("Product ID is required.");
+            throw new DomainException("Product ID is required.");
         
         if(string.IsNullOrWhiteSpace(sku))
-            throw new ArgumentException("SKU is required.");
+            throw new DomainException("SKU is required.");
         
         if(sku.Length > 100)
-            throw new ArgumentException("SKU cannot be exceed 100 characters.");
+            throw new DomainException("SKU cannot be exceed 100 characters.");
         
         if(name is not null && name.Length > 150)
-            throw new ArgumentException("Variant name cannot be exceed 150 characters.");
+            throw new DomainException("Variant name cannot be exceed 150 characters.");
         
         ProductId = productId;
         SKU = sku;

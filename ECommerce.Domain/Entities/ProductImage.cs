@@ -1,4 +1,5 @@
 ﻿using ECommerce.Domain.Common;
+using ECommerce.Domain.Exceptions;
 
 namespace ECommerce.Domain.Entities;
 
@@ -14,13 +15,13 @@ public class ProductImage : Entity
         Guid? productVariantId)
     {
         if (productId == Guid.Empty)
-            throw new ArgumentException("Product Id is required.");
+            throw new DomainException("Product Id is required.");
 
         if (string.IsNullOrEmpty(url))
-            throw new ArgumentException("Image URL is required.");
+            throw new DomainException("Image URL is required.");
 
         if (sortOrder < 0)
-            throw new ArgumentException("Sort Order cannot be negative.");
+            throw new DomainException("Sort Order cannot be negative.");
 
         ProductId = productId;
         ProductVariantId = productVariantId;
