@@ -23,8 +23,8 @@ public class SellerOffer : AuditableEntity
         if (price <= 0)
             throw new DomainException("Price must be greater than zero.");
 
-        if (stock <= 0)
-            throw new DomainException("Stock must be greater than zero.");
+        if (stock < 0)
+            throw new DomainException("Stock cannot be negative.");
 
         SellerId = sellerId;
         ProductVariantId = productVariantId;
@@ -42,6 +42,7 @@ public class SellerOffer : AuditableEntity
     public decimal Price { get; private set; }
     public int Stock { get; private set; }
     public SellerOfferStatus Status { get; private set; }
+    public uint RowVersion { get; private set; }
 
 
     //method's
@@ -64,19 +65,25 @@ public class SellerOffer : AuditableEntity
 
     public void UpdateStock(int stock)
     {
-        if (stock <= 0)
-            throw new DomainException("Stock must be greater than zero.");
+        if (stock < 0)
+            throw new DomainException("Stock cannot be negative.");
 
         Stock = stock;
     }
 
     public void Activate()
     {
+        if(Status == SellerOfferStatus.Active)
+            throw new DomainException("Seller offer is already active.");
+        
         Status = SellerOfferStatus.Active;
     }
 
     public void Deactivate()
     {
+        if(Status == SellerOfferStatus.Inactive)
+            throw new DomainException("Seller offer is already inactive.");
+        
         Status = SellerOfferStatus.Inactive;
     }
 }

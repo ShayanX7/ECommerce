@@ -1,6 +1,5 @@
 ﻿using ECommerce.Application.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 using ECommerce.Domain.Exceptions;
 using FluentValidation;
 
@@ -8,58 +7,84 @@ namespace ECommerce.API.Middleware;
 
 public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, CancellationToken cancellationToken)
     {
         try
         {
             await next(context);
         }
+        catch (ValidationException exception)
+        {
+            await WriteProblemDetailsAsync(
+                context,
+                StatusCodes.Status400BadRequest,
+                "Validation failed.",
+                exception.Message,
+                cancellationToken);
+        }
+        catch (NotFoundException exception)
+        {
+            await WriteProblemDetailsAsync(
+                context,
+                StatusCodes.Status404NotFound,
+                "Resource not found.",
+                exception.Message,
+                cancellationToken);
+        }
+        catch (DomainException exception)
+        {
+            await WriteProblemDetailsAsync(
+                context,
+                StatusCodes.Status409Conflict,
+                "Business rule violation.",
+                exception.Message,
+                cancellationToken);
+        }
+        catch (BusinessRuleException exception)
+        {
+            await WriteProblemDetailsAsync(
+                context,
+                StatusCodes.Status409Conflict,
+                "Business rule violation.",
+                exception.Message,
+                cancellationToken);
+        }
+        catch (ConcurrencyConflictException exception)
+        {
+            await WriteProblemDetailsAsync(
+                context,
+                StatusCodes.Status409Conflict,
+                "Concurrency conflict.",
+                exception.Message,
+                cancellationToken);
+        }
         catch (Exception exception)
         {
-            logger.LogError(exception, "An unhandled exception occurred.");
-            await HandleExceptionAsync(context, exception);
+            logger.LogError(exception, "An unhandled exception occurred while processing the request.");
+            await WriteProblemDetailsAsync(
+                context,
+                StatusCodes.Status500InternalServerError,
+                "An unhandled exception occurred.",
+                "An unhandled exception occurred.",
+                cancellationToken);
         }
     }
 
-    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private async Task WriteProblemDetailsAsync(HttpContext context, int statusCode, string title, string detail,
+        CancellationToken cancellationToken)
     {
-        var statusCode = exception switch
-        {
-            NotFoundException => StatusCodes.Status404NotFound,
-            ValidationException => StatusCodes.Status400BadRequest,
-            DomainException => StatusCodes.Status409Conflict,
-            BusinessRuleException => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status500InternalServerError
-        };
+        if (context.Response.HasStarted) return;
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/problem+json";
 
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
-            Title = statusCode switch
-            {
-                StatusCodes.Status404NotFound => "Resource not found.",
-                StatusCodes.Status400BadRequest => "Validation failed.",
-                StatusCodes.Status409Conflict => "Business rule violation",
-                _ => "An unhandled exception occurred."
-            },
-            Detail = statusCode switch
-            {
-                StatusCodes.Status404NotFound => exception.Message,
-                StatusCodes.Status409Conflict => exception.Message,
-                _ => null
-            },
+            Title = title,
+            Detail = detail,
             Instance = context.Request.Path
         };
 
-        if (exception is ValidationException validationException)
-        {
-            problemDetails.Extensions["errors"] = validationException.Errors
-                .GroupBy(error => error.PropertyName).ToDictionary(group => group.Key,
-                    group => group.Select(error => error.ErrorMessage).ToArray());
-        }
-
-        context.Response.StatusCode = statusCode;
-        context.Response.ContentType = "application/problem+json";
-        await context.Response.WriteAsJsonAsync(problemDetails);
+        await context.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
     }
 }
