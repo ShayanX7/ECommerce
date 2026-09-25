@@ -1,4 +1,5 @@
 ﻿using ECommerce.Application.Exceptions;
+using ECommerce.Domain.Entities;
 using ECommerce.Infrastructure.Identity;
 using ECommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -45,7 +46,7 @@ public sealed class SellerOfferConcurrencyTests
 
             setupContext.Users.Add(seller);
 
-            var sellerOffer = Domain.Entities.SellerOffer.Create(
+            var sellerOffer = SellerOffer.Create(
                 seller.Id,
                 productVariant!.Id,
                 100_000,
