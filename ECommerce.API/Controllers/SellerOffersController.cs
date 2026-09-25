@@ -1,4 +1,6 @@
-﻿using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.CreateSellerOffer;
+﻿using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.ActiveSellerOffer;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.CreateSellerOffer;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.DeactivateSellerOffer;
 using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.GetSellerOfferById;
 using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.UpdateSellerOfferPrice;
 using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.UpdateSellerOfferStock;
@@ -39,6 +41,22 @@ public class SellerOffersController(ISender sender) : ControllerBase
     
     [HttpPut("stock")]
     public async Task<IActionResult> UpdateStock(UpdateSellerOfferStockCommand command,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(command, cancellationToken);
+        return NoContent();
+    }
+    
+    [HttpPut("activate")]
+    public async Task<IActionResult> Activate(ActivateSellerOfferCommand command,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(command, cancellationToken);
+        return NoContent();
+    }
+    
+    [HttpPut("deactivate")]
+    public async Task<IActionResult> Deactivate(DeactivateSellerOfferCommand command,
         CancellationToken cancellationToken)
     {
         await sender.Send(command, cancellationToken);
