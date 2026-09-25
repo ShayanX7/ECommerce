@@ -17,6 +17,7 @@ public sealed class GetSellerOfferByIdQueryHandler(ISellerOfferRepository seller
             offer.SellerId,
             offer.Price,
             offer.Stock,
-            offer.Status);
+            offer.Status,
+            offer.RowVersion);
     }
 }

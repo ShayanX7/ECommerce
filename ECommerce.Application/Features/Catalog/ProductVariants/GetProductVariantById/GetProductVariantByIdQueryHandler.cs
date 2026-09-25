@@ -16,6 +16,7 @@ public sealed class GetProductVariantByIdQueryHandler(IProductVariantRepository 
 
         return new ProductVariantDto(variant.Id, variant.ProductId, variant.SKU, variant.Name, variant.Status,
             variant.SellerOffers.Where(offer => offer.Status == SellerOfferStatus.Active).Select(offer =>
-                new SellerOfferDto(offer.Id, offer.SellerId, offer.Price, offer.Stock, offer.Status)).ToList());
+                new SellerOfferDto(offer.Id, offer.SellerId, offer.Price, offer.Stock, offer.Status,
+                    offer.RowVersion)).ToList());
     }
 }

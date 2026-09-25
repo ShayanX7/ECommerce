@@ -17,21 +17,14 @@ public sealed class GetProductByIdQueryHandler(IProductRepository productReposit
         var product = await productRepository.GetByIdWithDetailsAsync(query.ProductId, cancellationToken);
         if (product is null) return null;
 
-        return new ProductDetailsDto(
-            product.Id,
-            product.Name,
-            product.Description,
-            product.Status,
-            new BrandDto(
-                product.Brand!.Id,
-                product.Brand.Name),
+        return new ProductDetailsDto(product.Id, product.Name, product.Description, product.Status,
+            new BrandDto(product.Brand!.Id, product.Brand.Name),
             new CategoryDto(product.Category.Id, product.Category.Name),
             product.Variants.Select(variant => new ProductVariantDto(variant.Id, variant.ProductId, variant.SKU,
-                    variant.Name, variant.Status, variant.SellerOffers
-                        .Where(offer => offer.Status == SellerOfferStatus.Active).Select(offer =>
-                            new SellerOfferDto(offer.Id, offer.SellerId, offer.Price, offer.Stock, offer.Status))
-                        .ToList()))
-                .ToList(),
+                variant.Name, variant.Status,
+                variant.SellerOffers.Where(offer => offer.Status == SellerOfferStatus.Active).Select(offer =>
+                    new SellerOfferDto(offer.Id, offer.SellerId, offer.Price, offer.Stock, offer.Status,
+                        offer.RowVersion)).ToList())).ToList(),
             product.Images.OrderBy(image => image.SortOrder).Select(image => new ProductImageDto(image.Id, image.Url,
                 image.AltText, image.SortOrder, image.IsPrimary, image.ProductVariantId)).ToList());
     }
