@@ -9,6 +9,6 @@ public sealed class CreateSellerOfferCommandValidator : AbstractValidator<Create
         RuleFor(x => x.SellerId).NotEmpty();
         RuleFor(x => x.ProductVariantId).NotEmpty();
         RuleFor(x => x.Price).GreaterThan(0);
-        RuleFor(x => x.Stock).GreaterThan(0);
+        RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
     }
 }
