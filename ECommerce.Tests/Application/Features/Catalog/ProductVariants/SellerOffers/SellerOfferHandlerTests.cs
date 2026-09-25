@@ -1,6 +1,7 @@
 ﻿using ECommerce.Application.Abstractions.Persistence;
 using ECommerce.Application.Exceptions;
 using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.CreateSellerOffer;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.GetSellerOfferById;
 using ECommerce.Domain.Entities;
 using ECommerce.Domain.Enums;
 
@@ -218,6 +219,8 @@ public sealed class SellerOfferHandlerTests
     {
         public SellerOffer? AddedOffer { get; private set; }
 
+        public SellerOffer? Offer { get; set; }
+
         public Task AddAsync(
             SellerOffer sellerOffer,
             CancellationToken cancellationToken = default)
@@ -230,7 +233,10 @@ public sealed class SellerOfferHandlerTests
             Guid sellerOfferId,
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<SellerOffer?>(null);
+            if (Offer is null || Offer.Id != sellerOfferId)
+                return Task.FromResult<SellerOffer?>(null);
+
+            return Task.FromResult<SellerOffer?>(Offer);
         }
 
         public Task<SellerOffer?> GetByIdForUpdateAsync(
@@ -252,5 +258,61 @@ public sealed class SellerOfferHandlerTests
             SaveChangesCalled = true;
             return Task.FromResult(1);
         }
+    }
+    
+    [Test]
+    public async Task GetSellerOfferById_should_return_null_when_offer_does_not_exist()
+    {
+        var sellerOfferRepository = new FakeSellerOfferRepository();
+    
+        var handler = new GetSellerOfferByIdQueryHandler(
+            sellerOfferRepository);
+
+        var query = new GetSellerOfferByIdQuery(Guid.NewGuid());
+
+        var result = await handler.Handle(
+            query,
+            CancellationToken.None);
+
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public async Task GetSellerOfferById_should_return_mapped_dto_when_offer_exists()
+    {
+        var sellerId = Guid.NewGuid();
+        var productVariantId = Guid.NewGuid();
+
+        var sellerOffer = SellerOffer.Create(
+            sellerId,
+            productVariantId,
+            250_000,
+            15);
+    
+        var sellerOfferRepository = new FakeSellerOfferRepository
+        {
+            Offer = sellerOffer
+        };
+
+        var handler = new GetSellerOfferByIdQueryHandler(
+            sellerOfferRepository);
+
+        var query = new GetSellerOfferByIdQuery(sellerOffer.Id);
+
+        var result = await handler.Handle(
+            query,
+            CancellationToken.None);
+
+        Assert.That(result, Is.Not.Null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result!.Id, Is.EqualTo(sellerOffer.Id));
+            Assert.That(result.SellerId, Is.EqualTo(sellerId));
+            Assert.That(result.Price, Is.EqualTo(250_000));
+            Assert.That(result.Stock, Is.EqualTo(15));
+            Assert.That(result.Status, Is.EqualTo(SellerOfferStatus.Inactive));
+            Assert.That(result.RowVersion, Is.EqualTo(sellerOffer.RowVersion));
+        });
     }
 }
