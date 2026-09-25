@@ -1,6 +1,7 @@
 ﻿using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.CreateSellerOffer;
 using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.GetSellerOfferById;
 using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.UpdateSellerOfferPrice;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.UpdateSellerOfferStock;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,6 +31,14 @@ public class SellerOffersController(ISender sender) : ControllerBase
 
     [HttpPut("price")]
     public async Task<IActionResult> UpdatePrice(UpdateSellerOfferPriceCommand command,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(command, cancellationToken);
+        return NoContent();
+    }
+    
+    [HttpPut("stock")]
+    public async Task<IActionResult> UpdateStock(UpdateSellerOfferStockCommand command,
         CancellationToken cancellationToken)
     {
         await sender.Send(command, cancellationToken);

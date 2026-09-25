@@ -125,3 +125,12 @@ Content-Type: application/json
   "rowVersion": 932
 }
 ###
+PUT {{ECommerce_API_HostAddress}}/api/seller-offers/stock
+Content-Type: application/json
+
+{
+  "sellerOfferId": "9c0db6d2-fd7c-4039-9032-692fac6de236",
+  "stock": 20,
+  "rowVersion": 934
+}
+###
