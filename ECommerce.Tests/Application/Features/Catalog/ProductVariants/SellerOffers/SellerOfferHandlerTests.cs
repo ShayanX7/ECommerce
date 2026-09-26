@@ -1,7 +1,11 @@
 ﻿using ECommerce.Application.Abstractions.Persistence;
 using ECommerce.Application.Exceptions;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.ActiveSellerOffer;
 using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.CreateSellerOffer;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.DeactivateSellerOffer;
 using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.GetSellerOfferById;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.UpdateSellerOfferPrice;
+using ECommerce.Application.Features.Catalog.ProductVariants.SellerOffers.UpdateSellerOfferStock;
 using ECommerce.Domain.Entities;
 using ECommerce.Domain.Enums;
 
@@ -221,6 +225,8 @@ public sealed class SellerOfferHandlerTests
 
         public SellerOffer? Offer { get; set; }
 
+        public SellerOffer? OfferForUpdate { get; set; }
+
         public Task AddAsync(
             SellerOffer sellerOffer,
             CancellationToken cancellationToken = default)
@@ -244,7 +250,13 @@ public sealed class SellerOfferHandlerTests
             uint expectedRowVersion,
             CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<SellerOffer?>(null);
+            if (OfferForUpdate is null ||
+                OfferForUpdate.Id != sellerOfferId)
+            {
+                return Task.FromResult<SellerOffer?>(null);
+            }
+
+            return Task.FromResult<SellerOffer?>(OfferForUpdate);
         }
     }
 
@@ -313,6 +325,253 @@ public sealed class SellerOfferHandlerTests
             Assert.That(result.Stock, Is.EqualTo(15));
             Assert.That(result.Status, Is.EqualTo(SellerOfferStatus.Inactive));
             Assert.That(result.RowVersion, Is.EqualTo(sellerOffer.RowVersion));
+        });
+    }
+
+    [Test]
+    public async Task UpdateSellerOferPrice_should_throw_not_found_when_offer_does_not_exist()
+    {
+        var sellerOfferRepository = new FakeSellerOfferRepository();
+        var unitOfWork =  new FakeUnitOfWork();
+
+        var handler = new UpdateSellerOfferPriceCommandHandler(sellerOfferRepository, unitOfWork);
+
+        var command = new UpdateSellerOfferPriceCommand(
+            Guid.NewGuid(),
+            150_000,
+            1);
+
+        var exception = Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(
+            command,
+            CancellationToken.None));
+        
+        Assert.That(exception!.Message, Does.Contain("Seller offer"));
+
+        Assert.That(unitOfWork.SaveChangesCalled, Is.False);
+    }
+
+    [Test]
+    public async Task UpdateSellerOfferPrice_should_update_price_and_save_changes()
+    {
+        var sellerOffer = SellerOffer.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            100_000,
+            10);
+
+        var sellerOfferRepository = new FakeSellerOfferRepository
+        {
+            OfferForUpdate = sellerOffer
+        };
+
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new UpdateSellerOfferPriceCommandHandler(sellerOfferRepository, unitOfWork);
+
+        var command = new UpdateSellerOfferPriceCommand(
+            sellerOffer.Id,
+            150_000,
+            1);
+
+        await handler.Handle(command, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sellerOffer.Price, Is.EqualTo(150_000));
+
+            Assert.That(unitOfWork.SaveChangesCalled, Is.True);
+        });
+    }
+
+    [Test]
+    public async Task UpdateSellerOfferStock_should_throw_not_found_when_offer_does_not_exist()
+    {
+        var sellerOfferRepository = new FakeSellerOfferRepository();
+        var unitOfWork =  new FakeUnitOfWork();
+
+        var handler = new UpdateSellerOfferStockCommandHandler(sellerOfferRepository, unitOfWork);
+
+        var command = new UpdateSellerOfferStockCommand(
+            Guid.NewGuid(),
+            0,
+            1);
+
+        var exception = Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(
+            command, CancellationToken.None));
+        
+        Assert.That(exception!.Message, Does.Contain("Seller offer"));
+
+        Assert.That(unitOfWork.SaveChangesCalled, Is.False);
+    }
+    
+    [Test]
+    public async Task UpdateSellerOfferStock_should_update_stock_and_save_changes()
+    {
+        var sellerOffer = SellerOffer.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            100_000,
+            10);
+
+        var sellerOfferRepository = new FakeSellerOfferRepository
+        {
+            OfferForUpdate = sellerOffer
+        };
+
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new UpdateSellerOfferStockCommandHandler(sellerOfferRepository, unitOfWork);
+
+        var command = new UpdateSellerOfferStockCommand(
+            sellerOffer.Id,
+            0,
+            1);
+
+        await handler.Handle(command, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sellerOffer.Stock, Is.EqualTo(0));
+
+            Assert.That(unitOfWork.SaveChangesCalled, Is.True);
+        });
+    }
+    
+    [Test]
+    public async Task ActivateSellerOffer_should_throw_not_found_when_offer_does_not_exist()
+    {
+        var sellerOfferRepository = new FakeSellerOfferRepository();
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new ActivateSellerOfferCommandHandler(
+            sellerOfferRepository,
+            unitOfWork);
+
+        var command = new ActivateSellerOfferCommand(
+            Guid.NewGuid(),
+            1);
+
+        var exception = Assert.ThrowsAsync<NotFoundException>(
+            async () => await handler.Handle(
+                command,
+                CancellationToken.None));
+
+        Assert.That(
+            exception!.Message,
+            Does.Contain("Seller offer"));
+
+        Assert.That(
+            unitOfWork.SaveChangesCalled,
+            Is.False);
+    }
+
+    [Test]
+    public async Task ActivateSellerOffer_should_activate_offer_and_save_changes()
+    {
+        var sellerOffer = SellerOffer.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            100_000,
+            10);
+
+        var sellerOfferRepository = new FakeSellerOfferRepository
+        {
+            OfferForUpdate = sellerOffer
+        };
+
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new ActivateSellerOfferCommandHandler(
+            sellerOfferRepository,
+            unitOfWork);
+
+        var command = new ActivateSellerOfferCommand(
+            sellerOffer.Id,
+            1);
+
+        await handler.Handle(
+            command,
+            CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                sellerOffer.Status,
+                Is.EqualTo(SellerOfferStatus.Active));
+
+            Assert.That(
+                unitOfWork.SaveChangesCalled,
+                Is.True);
+        });
+    }
+    
+    [Test]
+    public async Task DeactivateSellerOffer_should_throw_not_found_when_offer_does_not_exist()
+    {
+        var sellerOfferRepository = new FakeSellerOfferRepository();
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new DeactivateSellerOfferCommandHandler(
+            sellerOfferRepository,
+            unitOfWork);
+
+        var command = new DeactivateSellerOfferCommand(
+            Guid.NewGuid(),
+            1);
+
+        var exception = Assert.ThrowsAsync<NotFoundException>(
+            async () => await handler.Handle(
+                command,
+                CancellationToken.None));
+
+        Assert.That(
+            exception!.Message,
+            Does.Contain("Seller offer"));
+
+        Assert.That(
+            unitOfWork.SaveChangesCalled,
+            Is.False);
+    }
+
+    [Test]
+    public async Task DeactivateSellerOffer_should_deactivate_offer_and_save_changes()
+    {
+        var sellerOffer = SellerOffer.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            100_000,
+            10);
+
+        sellerOffer.Activate();
+
+        var sellerOfferRepository = new FakeSellerOfferRepository
+        {
+            OfferForUpdate = sellerOffer
+        };
+
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new DeactivateSellerOfferCommandHandler(
+            sellerOfferRepository,
+            unitOfWork);
+
+        var command = new DeactivateSellerOfferCommand(
+            sellerOffer.Id,
+            1);
+
+        await handler.Handle(
+            command,
+            CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                sellerOffer.Status,
+                Is.EqualTo(SellerOfferStatus.Inactive));
+
+            Assert.That(
+                unitOfWork.SaveChangesCalled,
+                Is.True);
         });
     }
 }
