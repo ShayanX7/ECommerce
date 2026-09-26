@@ -6,6 +6,7 @@ public sealed class CreateSellerRequestCommandValidator : AbstractValidator<Crea
 {
     public CreateSellerRequestCommandValidator()
     {
+        RuleFor(x => x.UserId).NotEmpty();   
         RuleFor(x => x.Reason).MaximumLength(1000)
             .When(x => x.Reason is not null);
     }
