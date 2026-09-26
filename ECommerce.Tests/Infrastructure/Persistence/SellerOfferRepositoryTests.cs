@@ -90,8 +90,11 @@ public sealed class SellerOfferRepositoryTests
 
             // Resolve the real repository through DI.
             var configuration = new ConfigurationManager();
-            configuration["ConnectionStrings:ECommerceDb"] =
-                connectionString;
+            configuration["ConnectionStrings:ECommerceDb"] = connectionString;
+            configuration["Jwt:Issuer"] = "ECommerce.Tests";
+            configuration["Jwt:Audience"] = "ECommerce.Tests";
+            configuration["Jwt:ExpirationMinutes"] = "60";
+            configuration["Jwt:SecretKey"] = new string('t', 32);
 
             var services = new ServiceCollection();
 

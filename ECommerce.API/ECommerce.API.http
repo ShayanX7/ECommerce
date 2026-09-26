@@ -150,3 +150,11 @@ Content-Type: application/json
   "rowVersion": 936
 }
 ###
+POST {{ECommerce_API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "seller@test.com",
+  "password": "Password123!"
+}
+###
