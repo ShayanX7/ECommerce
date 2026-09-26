@@ -1,0 +1,462 @@
+﻿using ECommerce.Application.Abstractions.Persistence;
+using ECommerce.Application.Exceptions;
+using ECommerce.Application.Features.Sellers.SellerRequests.ApproveSellerRequest;
+using ECommerce.Application.Features.Sellers.SellerRequests.CreateSellerRequest;
+using ECommerce.Application.Features.Sellers.SellerRequests.GetSellerRequestById;
+using ECommerce.Application.Features.Sellers.SellerRequests.RejectSellerRequest;
+using ECommerce.Domain.Entities;
+using ECommerce.Domain.Enums;
+
+namespace ECommerce.Tests.Application.Features.Sellers.SellerRequests;
+
+public sealed class SellerRequestHandlerTests
+{
+    [Test]
+    public async Task CreateSellerRequest_should_create_request_and_return_id()
+    {
+        var userId = Guid.NewGuid();
+
+        var userRepository = new FakeUserRepository
+        {
+            ExistsResult = true
+        };
+
+        var sellerRequestRepository = new FakeSellerRequestRepository();
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new CreateSellerRequestCommandHandler(
+            sellerRequestRepository,
+            userRepository,
+            unitOfWork);
+
+        var command = new CreateSellerRequestCommand(
+            userId,
+            "I want to become a seller.");
+
+        var result = await handler.Handle(
+            command,
+            CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.Not.EqualTo(Guid.Empty));
+
+            Assert.That(
+                sellerRequestRepository.AddedRequest,
+                Is.Not.Null);
+
+            Assert.That(
+                sellerRequestRepository.AddedRequest!.UserId,
+                Is.EqualTo(userId));
+
+            Assert.That(
+                sellerRequestRepository.AddedRequest.Reason,
+                Is.EqualTo("I want to become a seller."));
+
+            Assert.That(
+                sellerRequestRepository.AddedRequest.Status,
+                Is.EqualTo(SellerRequestStatus.Pending));
+
+            Assert.That(
+                result,
+                Is.EqualTo(sellerRequestRepository.AddedRequest.Id));
+
+            Assert.That(
+                unitOfWork.SaveChangesCalled,
+                Is.True);
+        });
+    }
+
+    [Test]
+    public async Task CreateSellerRequest_should_throw_not_found_when_user_does_not_exist()
+    {
+        var userRepository = new FakeUserRepository
+        {
+            ExistsResult = false
+        };
+
+        var sellerRequestRepository = new FakeSellerRequestRepository();
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new CreateSellerRequestCommandHandler(
+            sellerRequestRepository,
+            userRepository,
+            unitOfWork);
+
+        var command = new CreateSellerRequestCommand(
+            Guid.NewGuid(),
+            "I want to become a seller.");
+
+        var exception = Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(
+            command,
+            CancellationToken.None));
+
+        Assert.That(
+            exception!.Message,
+            Does.Contain("User"));
+
+        Assert.That(
+            sellerRequestRepository.AddedRequest,
+            Is.Null);
+
+        Assert.That(
+            unitOfWork.SaveChangesCalled,
+            Is.False);
+    }
+
+    private sealed class FakeUserRepository : IUserRepository
+    {
+        public bool ExistsResult { get; set; }
+
+        public bool SetSellerStatusCalled { get; private set; }
+
+        public Guid? LastUserId { get; private set; }
+
+        public SellerStatus? LastSellerStatus { get; private set; }
+
+        public Task<bool> ExistsAsync(
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(ExistsResult);
+        }
+
+        public Task SetSellerStatusAsync(
+            Guid userId,
+            SellerStatus status,
+            CancellationToken cancellationToken)
+        {
+            SetSellerStatusCalled = true;
+            LastUserId = userId;
+            LastSellerStatus = status;
+
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FakeSellerRequestRepository : ISellerRequestRepository
+    {
+        public SellerRequest? AddedRequest { get; private set; }
+
+        public SellerRequest? Request { get; set; }
+
+        public Task AddAsync(
+            SellerRequest sellerRequest,
+            CancellationToken cancellationToken = default)
+        {
+            AddedRequest = sellerRequest;
+            return Task.CompletedTask;
+        }
+
+        public Task<SellerRequest?> GetByIdAsync(
+            Guid sellerRequestId,
+            CancellationToken cancellationToken = default)
+        {
+            if (Request is null || Request.Id != sellerRequestId)
+                return Task.FromResult<SellerRequest?>(null);
+
+            return Task.FromResult<SellerRequest?>(Request);
+        }
+    }
+
+    private sealed class FakeUnitOfWork : IUnitOfWork
+    {
+        public bool SaveChangesCalled { get; private set; }
+
+        public Task<int> SaveChangesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            SaveChangesCalled = true;
+            return Task.FromResult(1);
+        }
+    }
+
+    [Test]
+    public async Task GetSellerRequestById_should_return_null_when_request_does_not_exist()
+    {
+        var sellerRequestRepository = new FakeSellerRequestRepository();
+
+        var handler = new GetSellerRequestByIdQueryHandler(
+            sellerRequestRepository);
+
+        var query = new GetSellerRequestByIdQuery(Guid.NewGuid());
+
+        var result = await handler.Handle(
+            query,
+            CancellationToken.None);
+
+        Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public async Task GetSellerRequestById_should_return_mapped_dto_when_request_exists()
+    {
+        var userId = Guid.NewGuid();
+        var adminUserId = Guid.NewGuid();
+
+        var sellerRequest = SellerRequest.Create(
+            userId,
+            "I want to become a seller.");
+
+        sellerRequest.Approve(adminUserId);
+
+        var sellerRequestRepository = new FakeSellerRequestRepository
+        {
+            Request = sellerRequest
+        };
+
+        var handler = new GetSellerRequestByIdQueryHandler(
+            sellerRequestRepository);
+
+        var query = new GetSellerRequestByIdQuery(
+            sellerRequest.Id);
+
+        var result = await handler.Handle(
+            query,
+            CancellationToken.None);
+
+        Assert.That(result, Is.Not.Null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                result!.Id,
+                Is.EqualTo(sellerRequest.Id));
+
+            Assert.That(
+                result.UserId,
+                Is.EqualTo(userId));
+
+            Assert.That(
+                result.Status,
+                Is.EqualTo(SellerRequestStatus.Approved));
+
+            Assert.That(
+                result.Reason,
+                Is.EqualTo("I want to become a seller."));
+
+            Assert.That(
+                result.ReviewedByUserId,
+                Is.EqualTo(adminUserId));
+
+            Assert.That(
+                result.ReviewedAt,
+                Is.EqualTo(sellerRequest.ReviewedAt));
+        });
+    }
+
+    [Test]
+    public async Task ApproveSellerRequest_should_throw_not_found_when_request_does_not_exist()
+    {
+        var sellerRequestRepository = new FakeSellerRequestRepository();
+        var userRepository = new FakeUserRepository
+        {
+            ExistsResult = true
+        };
+
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new ApproveSellerRequestCommandHandler(
+            sellerRequestRepository,
+            userRepository,
+            unitOfWork);
+
+        var command = new ApproveSellerRequestCommand(
+            Guid.NewGuid(),
+            Guid.NewGuid());
+
+        var exception = Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(
+            command,
+            CancellationToken.None));
+
+        Assert.That(
+            exception!.Message,
+            Does.Contain("Seller request"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                userRepository.SetSellerStatusCalled,
+                Is.False);
+
+            Assert.That(
+                unitOfWork.SaveChangesCalled,
+                Is.False);
+        });
+    }
+
+    [Test]
+    public async Task ApproveSellerRequest_should_approve_request_activate_user_and_save_changes()
+    {
+        var userId = Guid.NewGuid();
+        var adminUserId = Guid.NewGuid();
+
+        var sellerRequest = SellerRequest.Create(
+            userId,
+            "I want to become a seller.");
+
+        var sellerRequestRepository = new FakeSellerRequestRepository
+        {
+            Request = sellerRequest
+        };
+
+        var userRepository = new FakeUserRepository
+        {
+            ExistsResult = true
+        };
+
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new ApproveSellerRequestCommandHandler(
+            sellerRequestRepository,
+            userRepository,
+            unitOfWork);
+
+        var command = new ApproveSellerRequestCommand(
+            sellerRequest.Id,
+            adminUserId);
+
+        await handler.Handle(
+            command,
+            CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                sellerRequest.Status,
+                Is.EqualTo(SellerRequestStatus.Approved));
+
+            Assert.That(
+                sellerRequest.ReviewedByUserId,
+                Is.EqualTo(adminUserId));
+
+            Assert.That(
+                sellerRequest.ReviewedAt,
+                Is.Not.Null);
+
+            Assert.That(
+                userRepository.SetSellerStatusCalled,
+                Is.True);
+
+            Assert.That(
+                userRepository.LastUserId,
+                Is.EqualTo(userId));
+
+            Assert.That(
+                userRepository.LastSellerStatus,
+                Is.EqualTo(SellerStatus.Active));
+
+            Assert.That(
+                unitOfWork.SaveChangesCalled,
+                Is.True);
+        });
+    }
+
+    [Test]
+    public async Task RejectSellerRequest_should_throw_not_found_when_request_does_not_exist()
+    {
+        var sellerRequestRepository = new FakeSellerRequestRepository();
+
+        var userRepository = new FakeUserRepository
+        {
+            ExistsResult = true
+        };
+
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new RejectSellerRequestCommandHandler(
+            sellerRequestRepository,
+            userRepository,
+            unitOfWork);
+
+        var command = new RejectSellerRequestCommand(
+            Guid.NewGuid(),
+            Guid.NewGuid());
+
+        var exception = Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(
+            command,
+            CancellationToken.None));
+
+        Assert.That(
+            exception!.Message,
+            Does.Contain("Seller request"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                userRepository.SetSellerStatusCalled,
+                Is.False);
+
+            Assert.That(
+                unitOfWork.SaveChangesCalled,
+                Is.False);
+        });
+    }
+
+    [Test]
+    public async Task RejectSellerRequest_should_reject_request_deactivate_user_and_save_changes()
+    {
+        var userId = Guid.NewGuid();
+        var adminUserId = Guid.NewGuid();
+
+        var sellerRequest = SellerRequest.Create(
+            userId,
+            "I want to become a seller.");
+
+        var sellerRequestRepository = new FakeSellerRequestRepository
+        {
+            Request = sellerRequest
+        };
+
+        var userRepository = new FakeUserRepository
+        {
+            ExistsResult = true
+        };
+
+        var unitOfWork = new FakeUnitOfWork();
+
+        var handler = new RejectSellerRequestCommandHandler(
+            sellerRequestRepository,
+            userRepository,
+            unitOfWork);
+
+        var command = new RejectSellerRequestCommand(
+            sellerRequest.Id,
+            adminUserId);
+
+        await handler.Handle(
+            command,
+            CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                sellerRequest.Status,
+                Is.EqualTo(SellerRequestStatus.Rejected));
+
+            Assert.That(
+                sellerRequest.ReviewedByUserId,
+                Is.EqualTo(adminUserId));
+
+            Assert.That(
+                sellerRequest.ReviewedAt,
+                Is.Not.Null);
+
+            Assert.That(
+                userRepository.SetSellerStatusCalled,
+                Is.True);
+
+            Assert.That(
+                userRepository.LastUserId,
+                Is.EqualTo(userId));
+
+            Assert.That(
+                userRepository.LastSellerStatus,
+                Is.EqualTo(SellerStatus.Rejected));
+
+            Assert.That(
+                unitOfWork.SaveChangesCalled,
+                Is.True);
+        });
+    }
+}
